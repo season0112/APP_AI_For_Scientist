@@ -1,0 +1,53 @@
+{
+  "name": "literature-search",
+  "description": "Search scientific literature using semantic understanding and relevance ranking",
+  "version": "1.0.0",
+  "author": "AI for Scientist",
+  "capabilities": [
+    "semantic_search",
+    "paper_ranking",
+    "relevance_scoring",
+    "keyword_extraction"
+  ],
+  "config": {
+    "model": "claude-sonnet-4-5",
+    "temperature": 0.3,
+    "max_results": 20,
+    "min_relevance_score": 0.3,
+    "search_timeout": 30
+  },
+  "prompts": {
+    "search": "You are a scientific literature search assistant. Given a research topic or paper, find the most relevant scientific papers.\n\nUser Query: {query}\nContext: {context}\n\nProvide a list of relevant papers with:\n1. Title\n2. Authors\n3. Abstract summary\n4. Relevance score (0-1)\n5. Key findings\n\nFocus on recent publications and highly cited works.",
+    "rank": "Rank these papers by relevance to the user's research:\n\nUser Paper: {user_paper}\nCandidate Papers: {papers}\n\nProvide relevance scores and explanations."
+  },
+  "data_sources": [
+    {
+      "name": "arxiv",
+      "url": "https://export.arxiv.org/api/query",
+      "priority": 1
+    },
+    {
+      "name": "pubmed",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/api/",
+      "priority": 2,
+      "enabled": false
+    }
+  ],
+  "output_format": {
+    "type": "json",
+    "schema": {
+      "papers": [
+        {
+          "title": "string",
+          "authors": ["string"],
+          "abstract": "string",
+          "relevance_score": "number",
+          "keywords": ["string"],
+          "publication_date": "string",
+          "arxiv_id": "string",
+          "pdf_url": "string"
+        }
+      ]
+    }
+  }
+}

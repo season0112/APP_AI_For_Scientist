@@ -1,0 +1,80 @@
+{
+  "name": "paper-analysis",
+  "description": "Analyze scientific papers and extract structured information",
+  "version": "1.0.0",
+  "author": "AI for Scientist",
+  "actions": [
+    {
+      "name": "extract_keywords",
+      "description": "Extract important keywords and phrases from paper text",
+      "parameters": {
+        "text": "string",
+        "max_keywords": "number"
+      },
+      "returns": {
+        "keywords": ["string"],
+        "confidence": ["number"]
+      }
+    },
+    {
+      "name": "summarize_abstract",
+      "description": "Generate concise summary of paper abstract",
+      "parameters": {
+        "abstract": "string",
+        "max_length": "number"
+      },
+      "returns": {
+        "summary": "string",
+        "key_points": ["string"]
+      }
+    },
+    {
+      "name": "identify_methodology",
+      "description": "Identify research methodology and techniques used",
+      "parameters": {
+        "text": "string"
+      },
+      "returns": {
+        "methodology": "string",
+        "techniques": ["string"],
+        "datasets": ["string"]
+      }
+    },
+    {
+      "name": "extract_citations",
+      "description": "Extract and parse paper citations",
+      "parameters": {
+        "text": "string"
+      },
+      "returns": {
+        "citations": [
+          {
+            "title": "string",
+            "authors": ["string"],
+            "year": "number"
+          }
+        ]
+      }
+    },
+    {
+      "name": "classify_field",
+      "description": "Classify paper into research field categories",
+      "parameters": {
+        "title": "string",
+        "abstract": "string",
+        "keywords": ["string"]
+      },
+      "returns": {
+        "primary_field": "string",
+        "secondary_fields": ["string"],
+        "confidence": "number"
+      }
+    }
+  ],
+  "config": {
+    "model": "claude-sonnet-4-5",
+    "temperature": 0.2,
+    "cache_results": true,
+    "cache_ttl": 3600
+  }
+}

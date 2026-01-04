@@ -1,0 +1,46 @@
+{
+  "name": "newsletter-generator",
+  "description": "Generate customized research newsletters with summaries and insights",
+  "version": "1.0.0",
+  "author": "AI for Scientist",
+  "capabilities": [
+    "text_generation",
+    "summarization",
+    "content_curation",
+    "insight_extraction"
+  ],
+  "config": {
+    "model": "claude-sonnet-4-5",
+    "temperature": 0.7,
+    "max_length": 2000,
+    "summary_style": "academic",
+    "tone": "professional"
+  },
+  "prompts": {
+    "generate_summary": "You are a scientific newsletter writer. Create an engaging summary of recent research.\n\nResearch Field: {field}\nUser's Paper: {user_paper}\nRelated Papers: {related_papers}\n\nGenerate a newsletter summary that:\n1. Highlights key themes across the papers\n2. Identifies breakthrough findings\n3. Shows connections between papers\n4. Suggests practical implications\n5. Recommends reading order\n\nWrite in an accessible yet academic style.",
+    "generate_insights": "Analyze these papers and provide key insights:\n\nPapers: {papers}\n\nProvide:\n1. Main themes\n2. Novel methodologies\n3. Future research directions\n4. Practical applications",
+    "generate_title": "Create a compelling newsletter title for:\n\nField: {field}\nDate: {date}\nTopic: {topic}\n\nThe title should be concise, informative, and engaging."
+  },
+  "formatting": {
+    "html_template": "default",
+    "include_toc": true,
+    "include_citations": true,
+    "max_papers_per_section": 10
+  },
+  "output_format": {
+    "type": "json",
+    "schema": {
+      "title": "string",
+      "summary": "string",
+      "sections": [
+        {
+          "name": "string",
+          "content": "string",
+          "papers": ["string"]
+        }
+      ],
+      "insights": ["string"],
+      "recommendations": ["string"]
+    }
+  }
+}
