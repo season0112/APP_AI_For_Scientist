@@ -57,13 +57,17 @@ class MainViewModel: ObservableObject {
 
     /// Add newsletter to saved newsletters
     func saveNewsletter(_ newsletter: Newsletter) async {
+        print("📰 [MainViewModel] Saving newsletter: \(newsletter.title)")
         userProfile.savedNewsletters.append(newsletter)
         saveUserProfile()
+        print("📰 [MainViewModel] Saved to user profile, total newsletters: \(userProfile.savedNewsletters.count)")
 
         // Also persist to file system
         do {
             try await NewsletterService.shared.saveNewsletter(newsletter)
+            print("✅ [MainViewModel] Successfully saved newsletter to file system")
         } catch {
+            print("❌ [MainViewModel] Failed to save newsletter to file system: \(error)")
             handleError(error)
         }
     }

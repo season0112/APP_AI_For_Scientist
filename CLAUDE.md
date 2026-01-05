@@ -8,17 +8,31 @@ This is a SwiftUI-based application called "AI for Scientist" targeting Apple pl
 
 ## Build and Development Commands
 
-### Building and Running
-- Open the project in Xcode: `open "AI for Scientist.xcodeproj"`
+### Quick Start
+- Open project in Xcode: `open "AI for Scientist.xcodeproj"` (or use `./run.sh`)
 - Build from command line: `xcodebuild -project "AI for Scientist.xcodeproj" -scheme "AI for Scientist" build`
+
+### Running the App
+- In Xcode: Select target device/simulator and press `Cmd+R`
+- List available simulators: `xcrun simctl list devices available`
+- Boot a simulator: `xcrun simctl boot "iPhone 15"`
 - Run tests: `xcodebuild test -project "AI for Scientist.xcodeproj" -scheme "AI for Scientist" -destination 'platform=iOS Simulator,name=iPhone 15'`
 
 ### Testing
-- Run unit tests: `xcodebuild test -project "AI for Scientist.xcodeproj" -scheme "AI for Scientist" -destination 'platform=iOS Simulator,name=iPhone 15' -only-testing:AI_for_ScientistTests`
-- Run UI tests: `xcodebuild test -project "AI for Scientist.xcodeproj" -scheme "AI for Scientist" -destination 'platform=iOS Simulator,name=iPhone 15' -only-testing:AI_for_ScientistUITests`
-- Run a single test: `xcodebuild test -project "AI for Scientist.xcodeproj" -scheme "AI for Scientist" -destination 'platform=iOS Simulator,name=iPhone 15' -only-testing:AI_for_ScientistTests/AI_for_ScientistTests/testExample`
+- Run all tests: `xcodebuild test -project "AI for Scientist.xcodeproj" -scheme "AI for Scientist" -destination 'platform=iOS Simulator,name=iPhone 15'`
+- Run unit tests only: `xcodebuild test -project "AI for Scientist.xcodeproj" -scheme "AI for Scientist" -destination 'platform=iOS Simulator,name=iPhone 15' -only-testing:AI_for_ScientistTests`
+- Run UI tests only: `xcodebuild test -project "AI for Scientist.xcodeproj" -scheme "AI for Scientist" -destination 'platform=iOS Simulator,name=iPhone 15' -only-testing:AI_for_ScientistUITests`
+- Run a single test: `xcodebuild test -project "AI for Scientist.xcodeproj" -scheme "AI for Scientist" -destination 'platform=iOS Simulator,name=iPhone 15' -only-testing:AI_for_ScientistTests/ModelTests/testPaperInitialization`
 
-Note: Adjust the `-destination` parameter based on the target platform (iOS/macOS).
+Note: Adjust the `-destination` parameter based on the target platform (iOS/macOS). Available simulators can vary by Xcode version.
+
+### Available Schemes and Targets
+- **Scheme**: "AI for Scientist" (single scheme)
+- **Targets**:
+  - `AI for Scientist`: Main application target
+  - `AI for ScientistTests`: Unit test target
+  - `AI for ScientistUITests`: UI test target
+- **Build Configurations**: Debug, Release
 
 ## Code Architecture
 
@@ -132,33 +146,42 @@ All views use SwiftUI and follow these patterns:
 - **Declarative UI**: All views built with SwiftUI declarative syntax
 
 ### Claude Agent Integration
-The app integrates with Claude agents for AI-powered features:
 
-**Literature Search** (`.claude/agents/literature-search.json`):
-- Semantic paper search
-- Relevance scoring
-- Paper ranking
+The app is designed to integrate with Claude agents for AI-powered features. Agent configurations are stored in `.claude/` directory:
+
+**Literature Search Agent** (`.claude/agents/literature-search.json`):
+- Performs semantic paper search using Claude Sonnet 4.5
+- Relevance scoring and paper ranking
+- Searches arXiv (primary), PubMed (planned)
+- Returns structured JSON with papers, relevance scores, keywords
 - Integration point: `LiteratureSearchService.searchWithAIAgent()`
 
-**Newsletter Generation** (`.claude/agents/newsletter-generator.json`):
-- Summary generation
-- Content curation
-- Insight extraction
+**Newsletter Generator Agent** (`.claude/agents/newsletter-generator.json`):
+- Generates customized research newsletters
+- Summary generation and content curation
+- Insight extraction from multiple papers
 - Integration point: `NewsletterService.generateSummary()`
 
-**Paper Analysis** (`.claude/skills/paper-analysis.json`):
-- Keyword extraction
-- Abstract summarization
-- Methodology identification
+**Paper Analysis Skill** (`.claude/skills/paper-analysis.json`):
+- Five actions: extract_keywords, summarize_abstract, identify_methodology, extract_citations, classify_field
+- Uses Claude Sonnet 4.5 with caching enabled
+- Returns structured data (keywords with confidence, summaries, methodologies, citations)
 - Integration point: Custom service methods
 
+**CLI Commands** (`.claude/commands/`):
+- `/search-papers <query> [--field <field>] [--max-results <n>]`: Search for papers
+- `/generate-newsletter --field <field> [--paper <id>] [--papers <ids>]`: Generate newsletter
+
+**Current Status**: Agent configurations exist but require full API integration. Service methods contain placeholder implementations that need to be connected to Claude API endpoints.
+
 ### Important Notes
-- File and directory names contain spaces, so always quote paths when using command-line tools
-- The project uses the module name `AI_for_Scientist` (with underscores) for imports in test files
-- When creating new Swift files, ensure they're added to the correct target in the Xcode project
-- All async operations use Swift's async/await (iOS 16+)
-- Local storage uses FileManager with Documents directory
-- User preferences stored with UserDefaults (encoded as JSON)
+- **File paths**: Directory names contain spaces, so always quote paths in command-line tools (e.g., `"AI for Scientist.xcodeproj"`)
+- **Module name**: Test files import the module as `AI_for_Scientist` (with underscores, not spaces)
+- **Target membership**: When creating new Swift files via Xcode, ensure they're added to the correct target (main app, tests, or UI tests)
+- **iOS version**: Minimum deployment target is iOS 16.0+ for async/await and modern SwiftUI features
+- **Local storage**: Papers and newsletters stored in Documents directory via FileManager
+- **User preferences**: UserProfile encoded as JSON and persisted in UserDefaults
+- **Claude Code permissions**: `.claude/settings.local.json` grants auto-approval for `xcodebuild`, `xcrun simctl`, and `cat` commands
 
 ### Adding New Features
 When adding features, follow this workflow:

@@ -166,6 +166,8 @@ class NewsletterService {
     /// Save newsletter to local storage
     /// - Parameter newsletter: Newsletter to save
     func saveNewsletter(_ newsletter: Newsletter) async throws {
+        print("💾 [NewsletterService] Saving newsletter \(newsletter.id.uuidString)...")
+
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
 
@@ -177,16 +179,24 @@ class NewsletterService {
         try FileManager.default.createDirectory(at: newslettersDirectory, withIntermediateDirectories: true)
 
         let fileURL = newslettersDirectory.appendingPathComponent("\(newsletter.id.uuidString).json")
+        print("💾 [NewsletterService] Saving to: \(fileURL.path)")
+
         try data.write(to: fileURL)
+        print("✅ [NewsletterService] Successfully saved newsletter file")
     }
 
     /// Load all saved newsletters
     /// - Returns: Array of saved newsletters
     func loadNewsletters() async throws -> [Newsletter] {
+        print("📂 [NewsletterService] Loading newsletters from file system...")
+
         let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
         let newslettersDirectory = documentsPath.appendingPathComponent("Newsletters", isDirectory: true)
 
+        print("📂 [NewsletterService] Newsletters directory: \(newslettersDirectory.path)")
+
         guard FileManager.default.fileExists(atPath: newslettersDirectory.path) else {
+            print("⚠️ [NewsletterService] Newsletters directory does not exist")
             return []
         }
 
@@ -195,6 +205,8 @@ class NewsletterService {
             includingPropertiesForKeys: nil
         ).filter { $0.pathExtension == "json" }
 
+        print("📂 [NewsletterService] Found \(files.count) JSON files")
+
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
 
@@ -202,14 +214,17 @@ class NewsletterService {
 
         for file in files {
             do {
+                print("📄 [NewsletterService] Loading file: \(file.lastPathComponent)")
                 let data = try Data(contentsOf: file)
                 let newsletter = try decoder.decode(Newsletter.self, from: data)
                 newsletters.append(newsletter)
+                print("✅ [NewsletterService] Successfully loaded newsletter: \(newsletter.title)")
             } catch {
-                print("Failed to load newsletter from \(file): \(error)")
+                print("❌ [NewsletterService] Failed to load newsletter from \(file.lastPathComponent): \(error)")
             }
         }
 
+        print("📋 [NewsletterService] Total newsletters loaded: \(newsletters.count)")
         return newsletters.sorted { $0.generatedDate > $1.generatedDate }
     }
 

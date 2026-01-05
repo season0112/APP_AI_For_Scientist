@@ -30,31 +30,63 @@ class LiteratureSearchService {
     ///   - maxResults: Maximum number of results
     /// - Returns: Array of found papers
     func searchArXiv(keywords: [String], field: ResearchField, maxResults: Int = 20) async throws -> [Paper] {
-        // Construct search query
-        let searchTerms = (keywords + field.keywords).joined(separator: "+OR+")
+        print("🔎 [arXiv] Starting search with keywords: \(keywords), field: \(field.name)")
+
+        // Combine and encode search terms
+        let allKeywords = keywords + field.keywords
+        guard !allKeywords.isEmpty else {
+            print("❌ [arXiv] No keywords provided")
+            throw SearchError.noResults
+        }
+
+        // Encode each keyword properly (replace spaces with +, then URL encode)
+        let encodedTerms = allKeywords
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .filter { !$0.isEmpty }
+            .map { $0.replacingOccurrences(of: " ", with: "+") }
+            .compactMap { $0.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) }
+
+        let searchTerms = encodedTerms.joined(separator: "+OR+")
+        print("🔎 [arXiv] Encoded search terms: \(searchTerms)")
+
+        // Construct query string
         let queryString = "search_query=all:\(searchTerms)&start=0&max_results=\(maxResults)&sortBy=submittedDate&sortOrder=descending"
 
         guard var components = URLComponents(string: arxivBaseURL) else {
+            print("❌ [arXiv] Invalid base URL")
             throw SearchError.invalidURL
         }
 
         components.percentEncodedQuery = queryString
 
         guard let url = components.url else {
+            print("❌ [arXiv] Failed to construct URL")
             throw SearchError.invalidURL
         }
 
+        print("🌐 [arXiv] Request URL: \(url.absoluteString)")
+
         // Perform request
+        print("📡 [arXiv] Sending request...")
         let (data, response) = try await session.data(from: url)
 
-        guard let httpResponse = response as? HTTPURLResponse,
-              httpResponse.statusCode == 200 else {
+        guard let httpResponse = response as? HTTPURLResponse else {
+            print("❌ [arXiv] Invalid response type")
+            throw SearchError.networkError
+        }
+
+        print("📥 [arXiv] Response status: \(httpResponse.statusCode)")
+
+        guard httpResponse.statusCode == 200 else {
+            print("❌ [arXiv] Non-200 status code: \(httpResponse.statusCode)")
             throw SearchError.networkError
         }
 
         // Parse arXiv XML response
+        print("📋 [arXiv] Parsing response (data size: \(data.count) bytes)...")
         let papers = try parseArXivResponse(data)
 
+        print("✅ [arXiv] Successfully parsed \(papers.count) papers")
         return papers
     }
 

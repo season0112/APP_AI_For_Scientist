@@ -58,6 +58,11 @@ struct NewsletterGenerationContentView: View {
                         searchResultsSection
                     }
 
+                    // Show message if field is selected but no search performed yet
+                    if viewModel.selectedField != nil && viewModel.searchResults.isEmpty && !viewModel.isSearching {
+                        searchPromptSection
+                    }
+
                     // Step 5: Generate Newsletter
                     if !viewModel.searchResults.isEmpty {
                         generateSection
@@ -82,6 +87,11 @@ struct NewsletterGenerationContentView: View {
             .sheet(isPresented: $showFieldSelection) {
                 FieldSelectionView()
             }
+            .alert("Error", isPresented: $viewModel.showError) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(viewModel.errorMessage ?? "An error occurred")
+            }
         }
     }
 
@@ -98,20 +108,61 @@ struct NewsletterGenerationContentView: View {
 
             if let field = viewModel.selectedField {
                 FieldBadgeView(field: field) {
-                    viewModel.selectField(field)
+                    viewModel.selectField(nil)
                 }
             } else {
-                Button(action: { showFieldSelection = true }) {
-                    HStack {
-                        Text("Choose Field")
+                // Show preferred fields if available
+                if !mainViewModel.userProfile.preferredFields.isEmpty {
+                    VStack(spacing: 10) {
+                        ForEach(mainViewModel.userProfile.preferredFields) { field in
+                            Button(action: {
+                                viewModel.selectField(field)
+                            }) {
+                                HStack {
+                                    VStack(alignment: .leading, spacing: 5) {
+                                        Text(field.name)
+                                            .font(.subheadline)
+                                            .fontWeight(.semibold)
+                                            .foregroundColor(.primary)
+
+                                        Text(field.description)
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
+
+                                    Spacer()
+
+                                    Image(systemName: "chevron.right")
+                                        .foregroundColor(.blue)
+                                }
+                                .padding()
+                                .background(Color.blue.opacity(0.1))
+                                .cornerRadius(8)
+                            }
+                        }
+
+                        Button(action: { showFieldSelection = true }) {
+                            HStack {
+                                Image(systemName: "plus.circle")
+                                Text("Manage Fields")
+                                    .font(.caption)
+                            }
                             .foregroundColor(.blue)
-                        Spacer()
-                        Image(systemName: "chevron.right")
-                            .foregroundColor(.secondary)
+                        }
                     }
-                    .padding()
-                    .background(Color.gray.opacity(0.1))
-                    .cornerRadius(8)
+                } else {
+                    Button(action: { showFieldSelection = true }) {
+                        HStack {
+                            Text("Choose Field")
+                                .foregroundColor(.blue)
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .foregroundColor(.secondary)
+                        }
+                        .padding()
+                        .background(Color.gray.opacity(0.1))
+                        .cornerRadius(8)
+                    }
                 }
             }
         }
@@ -223,7 +274,48 @@ struct NewsletterGenerationContentView: View {
                         .foregroundColor(.secondary)
                 }
             }
+
+            // Show error inline
+            if let errorMessage = viewModel.errorMessage {
+                HStack(alignment: .top, spacing: 10) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundColor(.red)
+                    VStack(alignment: .leading, spacing: 5) {
+                        Text("Error")
+                            .font(.headline)
+                            .foregroundColor(.red)
+                        Text(errorMessage)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                .padding()
+                .background(Color.red.opacity(0.1))
+                .cornerRadius(10)
+            }
         }
+    }
+
+    private var searchPromptSection: some View {
+        VStack(spacing: 15) {
+            HStack {
+                Image(systemName: "arrow.up")
+                    .foregroundColor(.orange)
+                    .font(.title2)
+                Text("Please search for papers first")
+                    .font(.subheadline)
+                    .foregroundColor(.orange)
+                Spacer()
+            }
+
+            Text("Click 'Auto Search' above to automatically find papers related to your selected field" + (viewModel.selectedPaper != nil ? " and paper" : "") + ", or use AI search with a custom query.")
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.leading)
+        }
+        .padding()
+        .background(Color.orange.opacity(0.1))
+        .cornerRadius(10)
     }
 
     private var searchResultsSection: some View {
@@ -394,7 +486,7 @@ struct SearchResultPaperView: View {
                         .cornerRadius(4)
                 }
 
-                if let date = paper.publicationDate {
+                if paper.publicationDate != nil {
                     Text(paper.formattedDate)
                         .font(.caption2)
                         .foregroundColor(.secondary)

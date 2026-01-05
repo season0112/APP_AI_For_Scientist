@@ -34,13 +34,16 @@ class NewsletterListViewModel: ObservableObject {
 
     /// Load all saved newsletters
     func loadNewsletters() async {
+        print("📋 [NewsletterList] Loading newsletters...")
         isLoading = true
         clearError()
 
         do {
             newsletters = try await newsletterService.loadNewsletters()
+            print("✅ [NewsletterList] Loaded \(newsletters.count) newsletters")
             isLoading = false
         } catch {
+            print("❌ [NewsletterList] Failed to load newsletters: \(error)")
             handleError(error)
         }
     }

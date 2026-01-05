@@ -39,9 +39,17 @@ class NewsletterGenerationViewModel: ObservableObject {
 
     /// Search for related papers based on user's paper and selected field
     func searchRelatedPapers() async {
+        print("🔍 [Search] Starting search...")
+
         guard let field = selectedField else {
+            print("❌ [Search] Error: No field selected")
             handleError(NSError(domain: "NewsletterGeneration", code: 1, userInfo: [NSLocalizedDescriptionKey: "Please select a research field"]))
             return
+        }
+
+        print("📚 [Search] Field: \(field.name)")
+        if let paper = selectedPaper {
+            print("📄 [Search] Paper: \(paper.title)")
         }
 
         isSearching = true
@@ -52,10 +60,12 @@ class NewsletterGenerationViewModel: ObservableObject {
             if let paper = selectedPaper {
                 // Search based on user's paper
                 searchProgress = "Finding papers related to '\(paper.title)'..."
+                print("🔎 [Search] Searching related papers...")
                 searchResults = try await searchService.searchRelatedPapers(for: paper, maxResults: 15)
             } else {
                 // Search based on field keywords
                 searchProgress = "Searching \(field.name) literature..."
+                print("🔎 [Search] Searching with keywords: \(field.keywords)")
                 searchResults = try await searchService.searchArXiv(
                     keywords: field.keywords,
                     field: field,
@@ -63,10 +73,12 @@ class NewsletterGenerationViewModel: ObservableObject {
                 )
             }
 
+            print("✅ [Search] Found \(searchResults.count) papers")
             searchProgress = "Found \(searchResults.count) papers"
             isSearching = false
 
         } catch {
+            print("❌ [Search] Error: \(error.localizedDescription)")
             handleError(error)
         }
     }
@@ -138,7 +150,7 @@ class NewsletterGenerationViewModel: ObservableObject {
     }
 
     /// Select a research field
-    func selectField(_ field: ResearchField) {
+    func selectField(_ field: ResearchField?) {
         selectedField = field
     }
 
