@@ -37,19 +37,27 @@ struct PDFUploadContentView: View {
 
     var body: some View {
         NavigationView {
-            ScrollView {
-                VStack(spacing: 20) {
-                    // Upload Section
-                    uploadSection
+            ZStack {
+                // Dark background
+                ThemeConfig.Background.primary
+                    .ignoresSafeArea()
 
-                    // Uploaded Papers List
-                    if !mainViewModel.userProfile.uploadedPapers.isEmpty {
-                        uploadedPapersSection
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: ThemeConfig.Spacing.lg) {
+                        // Upload Section
+                        uploadSection
+
+                        // Uploaded Papers List
+                        if !mainViewModel.userProfile.uploadedPapers.isEmpty {
+                            uploadedPapersSection
+                        }
                     }
+                    .padding()
                 }
-                .padding()
             }
             .navigationTitle("Upload Papers")
+            .toolbarBackground(ThemeConfig.Background.secondary, for: .navigationBar)
+            .toolbarColorScheme(.dark, for: .navigationBar)
             .fileImporter(
                 isPresented: $showFilePicker,
                 allowedContentTypes: [.pdf],
@@ -71,75 +79,167 @@ struct PDFUploadContentView: View {
     // MARK: - View Components
 
     private var uploadSection: some View {
-        VStack(spacing: 15) {
+        VStack(spacing: ThemeConfig.Spacing.lg) {
             // Upload Button
             Button(action: { showFilePicker = true }) {
-                VStack(spacing: 15) {
-                    Image(systemName: "arrow.up.doc.fill")
-                        .font(.system(size: 50))
-                        .foregroundColor(.blue)
+                VStack(spacing: ThemeConfig.Spacing.lg) {
+                    ZStack {
+                        Circle()
+                            .fill(ThemeConfig.Gradients.neonPurpleBlue)
+                            .frame(width: 80, height: 80)
+                            .neonGlow(color: ThemeConfig.Neon.purple, radius: 20)
 
-                    Text("Upload PDF Paper")
-                        .font(.headline)
+                        Image(systemName: "arrow.up.doc.fill")
+                            .font(.system(size: 40))
+                            .foregroundColor(.white)
+                    }
 
-                    Text("Tap to select a PDF file from your device or iCloud")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .multilineTextAlignment(.center)
+                    VStack(spacing: 8) {
+                        Text("Upload PDF Paper")
+                            .font(.title3)
+                            .fontWeight(.bold)
+                            .foregroundColor(ThemeConfig.Text.primary)
+
+                        Text("Tap to select a PDF file from your device or iCloud")
+                            .font(.subheadline)
+                            .foregroundColor(ThemeConfig.Text.secondary)
+                            .multilineTextAlignment(.center)
+                    }
                 }
                 .frame(maxWidth: .infinity)
-                .padding(30)
-                .background(Color.blue.opacity(0.1))
-                .cornerRadius(12)
+                .padding(ThemeConfig.Spacing.xl)
+                .background(
+                    RoundedRectangle(cornerRadius: ThemeConfig.CornerRadius.xl)
+                        .fill(ThemeConfig.Background.elevated)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: ThemeConfig.CornerRadius.xl)
+                                .stroke(
+                                    LinearGradient(
+                                        colors: [
+                                            ThemeConfig.Neon.purple.opacity(0.6),
+                                            ThemeConfig.Neon.electricBlue.opacity(0.6)
+                                        ],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    ),
+                                    lineWidth: 2
+                                )
+                        )
+                )
+                .shadow(color: ThemeConfig.Shadows.purpleGlow, radius: 20, x: 0, y: 10)
             }
             .disabled(uploadViewModel.isUploading)
 
             // Upload Progress
             if uploadViewModel.isUploading {
-                VStack(spacing: 10) {
-                    ProgressView(value: uploadViewModel.uploadProgress)
-                        .progressViewStyle(.linear)
+                VStack(spacing: ThemeConfig.Spacing.md) {
+                    // Custom neon progress bar
+                    GeometryReader { geometry in
+                        ZStack(alignment: .leading) {
+                            RoundedRectangle(cornerRadius: ThemeConfig.CornerRadius.pill)
+                                .fill(ThemeConfig.Background.tertiary)
+                                .frame(height: 8)
 
-                    Text("Uploading and processing...")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                            RoundedRectangle(cornerRadius: ThemeConfig.CornerRadius.pill)
+                                .fill(ThemeConfig.Gradients.neonCyanMagenta)
+                                .frame(width: geometry.size.width * CGFloat(uploadViewModel.uploadProgress), height: 8)
+                                .neonGlow(color: ThemeConfig.Neon.cyan, radius: 8)
+                        }
+                    }
+                    .frame(height: 8)
+
+                    HStack {
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: ThemeConfig.Neon.cyan))
+
+                        Text("Uploading and processing...")
+                            .font(.subheadline)
+                            .foregroundColor(ThemeConfig.Text.secondary)
+                    }
                 }
+                .padding(ThemeConfig.Spacing.md)
+                .background(
+                    RoundedRectangle(cornerRadius: ThemeConfig.CornerRadius.md)
+                        .fill(ThemeConfig.Background.tertiary)
+                )
             }
 
             // Recently Uploaded Paper
             if let paper = uploadViewModel.uploadedPaper {
-                VStack(alignment: .leading, spacing: 10) {
-                    HStack {
+                VStack(alignment: .leading, spacing: ThemeConfig.Spacing.md) {
+                    HStack(spacing: ThemeConfig.Spacing.sm) {
                         Image(systemName: "checkmark.circle.fill")
-                            .foregroundColor(.green)
+                            .font(.title2)
+                            .foregroundColor(ThemeConfig.Neon.neonGreen)
+                            .neonGlow(color: ThemeConfig.Neon.neonGreen, radius: 8)
 
                         Text("Successfully Uploaded")
                             .font(.headline)
+                            .foregroundColor(ThemeConfig.Text.primary)
                     }
 
                     PaperDetailView(paper: paper)
 
                     Button(action: { showNewsletterGeneration = true }) {
-                        Text("Generate Newsletter")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.green)
-                            .cornerRadius(10)
+                        HStack {
+                            Text("Generate Newsletter")
+                                .font(.headline)
+                                .fontWeight(.semibold)
+
+                            Spacer()
+
+                            Image(systemName: "arrow.right.circle.fill")
+                                .font(.title3)
+                        }
+                        .foregroundColor(.white)
+                        .padding(ThemeConfig.Spacing.md)
+                        .frame(maxWidth: .infinity)
+                        .background(
+                            RoundedRectangle(cornerRadius: ThemeConfig.CornerRadius.md)
+                                .fill(ThemeConfig.Gradients.neonGreenCyan)
+                        )
+                        .neonGlow(color: ThemeConfig.Neon.neonGreen, radius: 10)
                     }
                 }
-                .padding()
-                .background(Color.green.opacity(0.1))
-                .cornerRadius(12)
+                .padding(ThemeConfig.Spacing.lg)
+                .background(
+                    RoundedRectangle(cornerRadius: ThemeConfig.CornerRadius.lg)
+                        .fill(ThemeConfig.Background.elevated)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: ThemeConfig.CornerRadius.lg)
+                                .stroke(ThemeConfig.Neon.neonGreen.opacity(0.3), lineWidth: 2)
+                        )
+                )
+                .shadow(color: ThemeConfig.Shadows.greenGlow, radius: 15, x: 0, y: 8)
             }
         }
     }
 
     private var uploadedPapersSection: some View {
-        VStack(alignment: .leading, spacing: 15) {
-            Text("Your Papers")
-                .font(.headline)
+        VStack(alignment: .leading, spacing: ThemeConfig.Spacing.md) {
+            HStack {
+                Text("Your Papers")
+                    .font(.title3)
+                    .fontWeight(.bold)
+                    .foregroundColor(ThemeConfig.Text.primary)
+
+                Spacer()
+
+                Text("\(mainViewModel.userProfile.uploadedPapers.count)")
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundColor(ThemeConfig.Neon.cyan)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 4)
+                    .background(
+                        Capsule()
+                            .fill(ThemeConfig.Neon.cyan.opacity(0.2))
+                            .overlay(
+                                Capsule()
+                                    .stroke(ThemeConfig.Neon.cyan, lineWidth: 1)
+                            )
+                    )
+            }
 
             ForEach(mainViewModel.userProfile.uploadedPapers) { paper in
                 PaperCardView(paper: paper) {
@@ -173,89 +273,158 @@ struct PaperDetailView: View {
     let paper: Paper
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: ThemeConfig.Spacing.md) {
             Text(paper.title)
                 .font(.title3)
-                .fontWeight(.semibold)
+                .fontWeight(.bold)
+                .foregroundColor(ThemeConfig.Text.primary)
 
             if !paper.authors.isEmpty {
-                HStack {
-                    Image(systemName: "person.2")
-                        .foregroundColor(.secondary)
+                HStack(spacing: 8) {
+                    Image(systemName: "person.2.fill")
+                        .foregroundColor(ThemeConfig.Neon.cyan)
                     Text(paper.formattedAuthors)
                         .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(ThemeConfig.Text.secondary)
                 }
             }
 
             if let abstract = paper.abstract {
-                VStack(alignment: .leading, spacing: 5) {
+                VStack(alignment: .leading, spacing: 6) {
                     Text("Abstract")
                         .font(.caption)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.secondary)
+                        .fontWeight(.bold)
+                        .foregroundColor(ThemeConfig.Neon.magenta)
+                        .textCase(.uppercase)
+                        .tracking(1)
 
                     Text(abstract)
                         .font(.caption)
+                        .foregroundColor(ThemeConfig.Text.secondary)
                         .lineLimit(5)
                 }
+                .padding(ThemeConfig.Spacing.sm)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(
+                    RoundedRectangle(cornerRadius: ThemeConfig.CornerRadius.sm)
+                        .fill(ThemeConfig.Background.tertiary)
+                )
             }
 
             if !paper.keywords.isEmpty {
                 ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 5) {
+                    HStack(spacing: 6) {
                         ForEach(paper.keywords, id: \.self) { keyword in
                             Text(keyword)
                                 .font(.caption2)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
-                                .background(Color.blue.opacity(0.2))
-                                .cornerRadius(4)
+                                .fontWeight(.medium)
+                                .foregroundColor(ThemeConfig.Neon.cyan)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 5)
+                                .background(
+                                    Capsule()
+                                        .fill(ThemeConfig.Neon.cyan.opacity(0.1))
+                                        .overlay(
+                                            Capsule()
+                                                .stroke(ThemeConfig.Neon.cyan.opacity(0.5), lineWidth: 1)
+                                        )
+                                )
                         }
                     }
                 }
             }
         }
-        .padding()
-        .background(Color.white)
-        .cornerRadius(10)
+        .padding(ThemeConfig.Spacing.md)
+        .background(
+            RoundedRectangle(cornerRadius: ThemeConfig.CornerRadius.md)
+                .fill(ThemeConfig.Background.tertiary)
+        )
     }
 }
 
 struct PaperCardView: View {
     let paper: Paper
     let onDelete: () -> Void
+    @State private var showDeleteConfirm = false
 
     var body: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 8) {
+        HStack(spacing: ThemeConfig.Spacing.md) {
+            // Paper icon
+            ZStack {
+                RoundedRectangle(cornerRadius: ThemeConfig.CornerRadius.sm)
+                    .fill(ThemeConfig.Gradients.neonPurpleBlue.opacity(0.2))
+                    .frame(width: 50, height: 50)
+
+                Image(systemName: "doc.fill")
+                    .font(.title3)
+                    .foregroundColor(ThemeConfig.Neon.purple)
+            }
+
+            VStack(alignment: .leading, spacing: 6) {
                 Text(paper.title)
                     .font(.subheadline)
                     .fontWeight(.semibold)
+                    .foregroundColor(ThemeConfig.Text.primary)
                     .lineLimit(2)
 
                 Text(paper.formattedAuthors)
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(ThemeConfig.Text.secondary)
+                    .lineLimit(1)
 
                 if !paper.keywords.isEmpty {
-                    Text(paper.keywords.prefix(3).joined(separator: ", "))
-                        .font(.caption2)
-                        .foregroundColor(.blue)
-                        .lineLimit(1)
+                    HStack(spacing: 4) {
+                        ForEach(paper.keywords.prefix(2), id: \.self) { keyword in
+                            Text(keyword)
+                                .font(.caption2)
+                                .foregroundColor(ThemeConfig.Neon.purple)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(
+                                    Capsule()
+                                        .fill(ThemeConfig.Neon.purple.opacity(0.2))
+                                )
+                        }
+                        if paper.keywords.count > 2 {
+                            Text("+\(paper.keywords.count - 2)")
+                                .font(.caption2)
+                                .foregroundColor(ThemeConfig.Text.tertiary)
+                        }
+                    }
                 }
             }
 
             Spacer()
 
-            Button(action: onDelete) {
-                Image(systemName: "trash")
-                    .foregroundColor(.red)
+            Button(action: { showDeleteConfirm = true }) {
+                Image(systemName: "trash.fill")
+                    .foregroundColor(ThemeConfig.Neon.magenta)
+                    .padding(8)
+                    .background(
+                        Circle()
+                            .fill(ThemeConfig.Neon.magenta.opacity(0.1))
+                            .overlay(
+                                Circle()
+                                    .stroke(ThemeConfig.Neon.magenta.opacity(0.3), lineWidth: 1)
+                            )
+                    )
+            }
+            .confirmationDialog("Delete Paper?", isPresented: $showDeleteConfirm) {
+                Button("Delete", role: .destructive) {
+                    onDelete()
+                }
+                Button("Cancel", role: .cancel) {}
             }
         }
-        .padding()
-        .background(Color.gray.opacity(0.1))
-        .cornerRadius(10)
+        .padding(ThemeConfig.Spacing.md)
+        .background(
+            RoundedRectangle(cornerRadius: ThemeConfig.CornerRadius.md)
+                .fill(ThemeConfig.Background.elevated)
+                .overlay(
+                    RoundedRectangle(cornerRadius: ThemeConfig.CornerRadius.md)
+                        .stroke(ThemeConfig.Neon.purple.opacity(0.2), lineWidth: 1)
+                )
+        )
     }
 }
 
